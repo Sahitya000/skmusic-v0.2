@@ -1,144 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SK Music Web</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #121212;
-      color: white;
-    }
-
-    .app {
-      padding: 20px;
-      max-width: 700px;
-      margin: auto;
-    }
-
-    input[type="text"] {
-      width: 80%;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-    }
-
-    button {
-      padding: 10px 15px;
-      background: #1ed760;
-      border: none;
-      border-radius: 8px;
-      color: black;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .song-list {
-      margin-top: 20px;
-    }
-
-    .song-item {
-      display: flex;
-      align-items: center;
-      background: #212121;
-      border-radius: 12px;
-      margin-bottom: 10px;
-      padding: 10px;
-      transition: 0.3s;
-    }
-
-    .song-item:hover {
-      background: #333;
-    }
-
-    .song-item img {
-      width: 60px;
-      height: 60px;
-      border-radius: 10px;
-      margin-right: 15px;
-    }
-
-    .song-info h4 {
-      margin: 0;
-    }
-
-    .song-info p {
-      margin: 2px 0;
-      color: #b3b3b3;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Play Saavn Song</title>
 </head>
-<body>
-  <div class="app">
-    <h1>🎶 SK Music</h1>
+<body style="background:#121212; color:white; text-align:center; font-family:sans-serif; padding:2rem;">
+  <h2>🎵 Saavn Song Player</h2>
+  <p>Search and Play a song using JioSaavn API</p>
 
-    <input type="text" id="searchInput" placeholder="Search for songs..." />
-    <button onclick="searchSongs()">Search</button>
+  <input type="text" id="search" placeholder="Enter song name" style="padding:10px; width:60%;">
+  <button onclick="playSong()" style="padding:10px 20px;">Search & Play</button>
 
-    <div id="results" class="song-list"></div>
-  </div>
+  <br><br>
+  <audio id="player" controls style="width:80%;"></audio>
 
   <script>
-    const API_KEY = "AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30";
-    const BASE_URL = "https://music.youtube.com/youtubei/v1/search?key=" + API_KEY;
+    async function playSong() {
+      const query = document.getElementById("search").value.trim().replace(/\s+/g, '+');
+      if (!query) return alert("Please enter a song name!");
 
-    async function searchSongs() {
-      const query = document.getElementById('searchInput').value;
-      const resultsDiv = document.getElementById('results');
-      resultsDiv.innerHTML = 'Searching...';
-
-      const payload = {
-        context: {
-          client: {
-            clientName: 'WEB_REMIX',
-            clientVersion: '1.20210912.07.00',
-          }
-        },
-        query: query
-      };
-
-      const res = await fetch(BASE_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "Mozilla/5.0"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      const items = data.contents?.tabbedSearchResultsRenderer?.tabs[0]?.tabRenderer?.content?.sectionListRenderer?.contents;
-
-      resultsDiv.innerHTML = '';
-
-      if (!items) {
-        resultsDiv.innerHTML = 'No results found.';
-        return;
-      }
-
-      for (let section of items) {
-        const musicShelf = section.musicShelfRenderer;
-        if (!musicShelf) continue;
-
-        for (let item of musicShelf.contents) {
-          const title = item.musicResponsiveListItemRenderer?.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text;
-          const artist = item.musicResponsiveListItemRenderer?.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text;
-          const thumb = item.musicResponsiveListItemRenderer?.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.[0]?.url;
-
-          resultsDiv.innerHTML += `
-            <div class="song-item">
-              <img src="${thumb}" />
-              <div class="song-info">
-                <h4>${title || 'Unknown Title'}</h4>
-                <p>${artist || 'Unknown Artist'}</p>
-              </div>
-            </div>
-          `;
+      const apiUrl = `https://www.jiosaavn.com/api.php?__call=search.getResults&q=${query}&_format=json&_marker=0&ctx=web6dot0`;
+      
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        
+        const firstSong = data.results?.[0];
+        if (!firstSong || !firstSong.media_preview_url) {
+          return alert("No song found!");
         }
+
+        // Convert preview URL to full song
+        const fullUrl = firstSong.media_preview_url.replace('preview', '') + '.mp4';
+
+        document.getElementById("player").src = fullUrl;
+        document.getElementById("player").play();
+      } catch (e) {
+        console.error(e);
+        alert("Error fetching song!");
       }
     }
   </script>
