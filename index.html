@@ -1,16 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Play Saavn Song</title>
+  <title>P Saavn Song</title>
 </head>
-<body style="background:#121212; color:white; text-align:center; font-family:sans-serif; padding:2rem;">
-  <h2>🎵 Saavn Song Player</h2>
-  <p>Search and Play a song using JioSaavn API</p>
-
+<body style="background:#121212; color:white; text-align:center; padding:2rem; font-family:sans-serif;">
+  <h2>ttt</h2>Saavn Song Player</h2>
   <input type="text" id="search" placeholder="Enter song name" style="padding:10px; width:60%;">
   <button onclick="playSong()" style="padding:10px 20px;">Search & Play</button>
-
   <br><br>
   <audio id="player" controls style="width:80%;"></audio>
 
@@ -19,20 +15,18 @@
       const query = document.getElementById("search").value.trim().replace(/\s+/g, '+');
       if (!query) return alert("Please enter a song name!");
 
-      const apiUrl = `https://www.jiosaavn.com/api.php?__call=search.getResults&q=${query}&_format=json&_marker=0&ctx=web6dot0`;
+      const apiUrl = `https://corsproxy.io/?https://www.jiosaavn.com/api.php?__call=search.getResults&q=${query}&_format=json&_marker=0&ctx=web6dot0`;
       
       try {
         const res = await fetch(apiUrl);
-        const data = await res.json();
-        
-        const firstSong = data.results?.[0];
+        const json = await res.json();
+
+        const firstSong = json.results?.[0];
         if (!firstSong || !firstSong.media_preview_url) {
           return alert("No song found!");
         }
 
-        // Convert preview URL to full song
         const fullUrl = firstSong.media_preview_url.replace('preview', '') + '.mp4';
-
         document.getElementById("player").src = fullUrl;
         document.getElementById("player").play();
       } catch (e) {
