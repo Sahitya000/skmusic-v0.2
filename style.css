@@ -1,0 +1,120 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #121212;
+  color: white;
+}
+
+.navbar {
+  background-color: #1f1f1f;
+  padding: 1rem;
+  text-align: center;
+  font-size: 1.5rem;
+  border-bottom: 1px solid #333;
+}
+
+.search-section {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  gap: 0.5rem;
+}
+
+.search-section input {
+  padding: 0.5rem;
+  width: 60%;
+  border-radius: 5px;
+  border: none;
+}
+
+.songs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.song-card {
+  background-color: #1e1e1e;
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.song-card:hover {
+  background-color: #2a2a2a;
+}
+
+.song-card img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.player-bar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #181818;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  gap: 1rem;
+  border-top: 1px solid #333;
+  z-index: 10;
+}
+
+.player-bar img {
+  width: 50px;
+  height: 50px;
+  border-radius: 5px;
+}
+
+audio {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.controls button {
+  background: #333;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.controls button:hover {
+  background: #555;
+}
+
+.playlist {
+  background: #181818;
+  padding: 1rem;
+  border-top: 1px solid #333;
+  margin-bottom: 160px;
+}
+
+.playlist ul {
+  list-style: none;
+  padding: 0;
+}
+
+.playlist li {
+  padding: 0.5rem;
+  cursor: pointer;
+  border-bottom: 1px solid #333;
+}
+
+.playlist li:hover {
+  background: #2a2a2a;
+}
