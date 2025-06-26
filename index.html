@@ -2,82 +2,177 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SK Music - Saavn Player</title>
+  <title>SK Music - Swipe Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: Arial;
-      background-color: #121212;
-      color: white;
-      padding: 20px;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #000;
+      color: #fff;
+      overflow: hidden;
     }
+
+    #searchSection {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      width: 90%;
+    }
+
     input, button {
-      padding: 10px;
-      margin: 10px 0;
       width: 100%;
+      padding: 12px;
       font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 10px;
     }
-    .song {
-      margin-bottom: 20px;
-      padding: 10px;
-      background: #1e1e1e;
-      border-radius: 10px;
+
+    .card {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+      background: linear-gradient(160deg, #1ed760, #121212);
+      transition: transform 0.5s ease;
     }
-    audio {
+
+    .card h2 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      font-size: 16px;
+      color: #ddd;
+    }
+
+    .card audio {
+      width: 90%;
+      margin-top: 20px;
+    }
+
+    #container {
+      height: 100vh;
       width: 100%;
-      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .navButtons {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9;
+    }
+
+    .navButtons button {
+      background-color: #fff;
+      color: #000;
+      font-weight: bold;
+      margin: 5px;
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <h2>🎵 Search Songs from JioSaavn</h2>
-  <input type="text" id="searchBox" placeholder="Type song name..." />
-  <button onclick="searchSongs()">Search</button>
+  <div id="searchSection">
+    <input id="searchBox" placeholder="Search any song e.g. Tum Hi Ho" />
+    <button onclick="searchSongs()">Search</button>
+  </div>
 
-  <div id="results"></div>
+  <div id="container"></div>
+
+  <div class="navButtons">
+    <button onclick="prevCard()">⬆️ Prev</button>
+    <button onclick="nextCard()">⬇️ Next</button>
+  </div>
 
   <script>
-async function searchSongs() {
-  const query = document.getElementById("searchBox").value;
-  const results = document.getElementById("results");
-  results.innerHTML = "🔍 Searching...";
+    let currentIndex = 0;
+    let cards = [];
 
-  try {
-    const res = await fetch(`https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}`);
-    const data = await res.json();
-    results.innerHTML = "";
-
-    if (!data?.data?.results?.length) {
-      results.innerHTML = "❌ No songs found.";
-      return;
+    function renderCards() {
+      const container = document.getElementById('container');
+      container.innerHTML = '';
+      cards.forEach((card, index) => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.transform = `translateY(${(index - currentIndex) * 100}%)`;
+        div.innerHTML = `
+          <h2>${card.name}</h2>
+          <p>${card.artist}</p>
+          <audio controls src="${card.url}"></audio>
+        `;
+        container.appendChild(div);
+      });
     }
 
-    for (const song of data.data.results) {
-      try {
-        const songDetailsRes = await fetch(`https://saavn.dev/api/songs/${song.id}`);
-        const songDetails = await songDetailsRes.json();
-        const songData = songDetails.data[0];
-
-        const audioURL = songData.downloadUrl?.[4]?.link || songData.downloadUrl?.[0]?.link;
-
-        if (!audioURL) continue; // Skip if no playable URL
-
-        const div = document.createElement("div");
-        div.className = "song";
-        div.innerHTML = `
-          <strong>${song.name}</strong><br>
-          <em>${song.primaryArtists || "Unknown Artist"}</em><br>
-          <audio controls src="${audioURL}"></audio>
-        `;
-        results.appendChild(div);
-      } catch (err) {
-        console.warn("Song error skipped:", song.name);
+    function nextCard() {
+      if (currentIndex < cards.length - 1) {
+        currentIndex++;
+        renderCards();
       }
     }
 
-  } catch (e) {
-    results.innerHTML = "⚠️ Error fetching songs.";
-    console.error(e);
-  }
-}
-</script>
+    function prevCard() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderCards();
+      }
+    }
+
+    async function searchSongs() {
+      const query = document.getElementById("searchBox").value.trim();
+      if (!query) return;
+
+      const res = await fetch(`https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}`);
+      const data = await res.json();
+
+      cards = [];
+
+      for (const song of data.data.results) {
+        try {
+          const res2 = await fetch(`https://saavn.dev/api/songs/${song.id}`);
+          const songData = await res2.json();
+          const info = songData.data[0];
+
+          const audioURL = info.downloadUrl?.[4]?.link || info.downloadUrl?.[0]?.link;
+          if (!audioURL) continue;
+
+          cards.push({
+            name: song.name,
+            artist: song.primaryArtists || 'Unknown',
+            url: audioURL
+          });
+        } catch (e) {
+          console.warn("Song skipped");
+        }
+      }
+
+      currentIndex = 0;
+      renderCards();
+    }
+
+    // Optional swipe gesture support
+    let startY = 0;
+    document.addEventListener("touchstart", e => startY = e.touches[0].clientY);
+    document.addEventListener("touchend", e => {
+      const endY = e.changedTouches[0].clientY;
+      if (startY - endY > 50) nextCard();
+      if (endY - startY > 50) prevCard();
+    });
+  </script>
+
+</body>
+</html>
