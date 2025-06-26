@@ -37,44 +37,47 @@
   <div id="results"></div>
 
   <script>
-    async function searchSongs() {
-      const query = document.getElementById("searchBox").value;
-      const results = document.getElementById("results");
-      results.innerHTML = "🔍 Searching...";
+async function searchSongs() {
+  const query = document.getElementById("searchBox").value;
+  const results = document.getElementById("results");
+  results.innerHTML = "🔍 Searching...";
 
+  try {
+    const res = await fetch(`https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    results.innerHTML = "";
+
+    if (!data?.data?.results?.length) {
+      results.innerHTML = "❌ No songs found.";
+      return;
+    }
+
+    for (const song of data.data.results) {
       try {
-        const res = await fetch(`https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}`);
-        const data = await res.json();
+        const songDetailsRes = await fetch(`https://saavn.dev/api/songs/${song.id}`);
+        const songDetails = await songDetailsRes.json();
+        const songData = songDetails.data[0];
 
-        if (!data?.data?.results.length) {
-          results.innerHTML = "❌ No songs found.";
-          return;
-        }
+        const audioURL = songData.downloadUrl?.[4]?.link || songData.downloadUrl?.[0]?.link;
 
-        results.innerHTML = "";
+        if (!audioURL) continue; // Skip if no playable URL
 
-        for (const song of data.data.results) {
-          // Get playable media URL
-          const songDetails = await fetch(`https://saavn.dev/api/songs/${song.id}`);
-          const songData = await songDetails.json();
-
-          const playableUrl = songData.data[0].downloadUrl?.[4]?.link || songData.data[0].downloadUrl?.[0]?.link;
-
-          const div = document.createElement("div");
-          div.className = "song";
-          div.innerHTML = `
-            <strong>${song.name}</strong><br>
-            <em>${song.primaryArtists}</em><br>
-            <audio controls src="${playableUrl}"></audio>
-          `;
-          results.appendChild(div);
-        }
-
-      } catch (e) {
-        results.innerHTML = "⚠️ Error fetching songs.";
-        console.error(e);
+        const div = document.createElement("div");
+        div.className = "song";
+        div.innerHTML = `
+          <strong>${song.name}</strong><br>
+          <em>${song.primaryArtists || "Unknown Artist"}</em><br>
+          <audio controls src="${audioURL}"></audio>
+        `;
+        results.appendChild(div);
+      } catch (err) {
+        console.warn("Song error skipped:", song.name);
       }
     }
-  </script>
-</body>
-</html>
+
+  } catch (e) {
+    results.innerHTML = "⚠️ Error fetching songs.";
+    console.error(e);
+  }
+}
+</script>
